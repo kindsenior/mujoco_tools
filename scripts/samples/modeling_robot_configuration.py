@@ -53,7 +53,7 @@ def sample_manipulator():
 def sample_robot_biped():
     spec = mujoco.MjSpec()
 
-    # base_link    
+    # base_link
     base = spec.worldbody.add_body(name="base_link", pos=[0, 0, 0.05])
     base.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, size=[0.05, 0.05, 0.02], rgba=gray)
 
