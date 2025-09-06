@@ -5,10 +5,50 @@ import numpy as np
 import mujoco
 import mujoco.viewer
 
-red   = [1,0,0, 0.7]
-green = [0,1,0, 0.7]
-blue  = [0,0,1, 0.7]
-gray  = [0.8, 0.8, 0.8, 1.0]
+red   = [1,0,0, 0.6]
+green = [0,1,0, 0.6]
+blue  = [0,0,1, 0.6]
+gray  = [0.8, 0.8, 0.8, 0.6]
+
+def sample_manipulator():
+    spec = mujoco.MjSpec()
+
+    # base_link
+    base = spec.worldbody.add_body(name="base_link", pos=[0, 0, 0])
+    base.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, size=[0.05, 0.05, 0.02], rgba=gray)
+
+    # link0
+    link0 = base.add_body(name="link0", mass=0.5, inertia=[8e-4, 8e-4, 8e-4], pos=[0, 0, 0.02])
+    link0.add_joint(name="joint0", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 0, 1], range=[-np.pi, np.pi])
+    # link1
+    link1 = link0.add_body(name="link1", mass=0.3, inertia=[4e-4, 4e-4, 4e-4])
+    link1.add_joint(name="joint1", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[1, 0, 0], range=[-np.pi, np.pi])
+    # link2
+    link2 = link1.add_body(name="link2", mass=0.2, inertia=[2e-4, 2e-4, 2e-4])
+    link2.add_joint(name="joint2", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-np.pi, np.pi])
+    link2.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0, 0, 0, 0, 0, 0.3], size=[0.02, 0.0, 0.0], rgba=red)
+    # link3
+    link3 = link2.add_body(name="link3", mass=0.2, inertia=[2e-4, 2e-4, 2e-4], pos = [0, 0, 0.3])
+    link3.add_joint(name="joint3", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-np.pi, np.pi])
+    link3.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0, 0, 0, 0, 0, 0.3], size=[0.02, 0.0, 0.0], rgba=green)
+    # link4
+    link4 = link3.add_body(name="link4", mass=0.1, inertia=[1e-4, 1e-4, 1e-4], pos=[0, 0, 0.3])
+    link4.add_joint(name="joint4", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 0, 1], range=[-np.pi, np.pi])
+    # link5
+    link5 = link4.add_body(name="link5", mass=0.1, inertia=[1e-4, 1e-4, 1e-4])
+    link5.add_joint(name="joint5", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-np.pi, np.pi])
+    # link6
+    link6 = link5.add_body(name="link6", mass=0.1, inertia=[1e-4, 1e-4, 1e-4])
+    link6.add_joint(name="joint6", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[1, 0, 0], range=[-np.pi, np.pi])
+    link6.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,0, 0,0,0.1], size=[0.02, 0.0, 0.0], rgba=blue)
+    # end effector
+    link6.add_site(name="ee", pos=[0, 0, 0.12], size=[0.01, 0.0, 0.0])
+
+    # compile model
+    model = spec.compile()
+    data = mujoco.MjData(model)
+
+    return model, spec, data
 
 def sample_robot_biped():
     spec = mujoco.MjSpec()
