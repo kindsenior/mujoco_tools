@@ -111,44 +111,26 @@ def sample_robot_biped():
 
     return model, spec, data
 
-# create model and data
-model, spec, data = sample_robot_biped()
+def test():
+    # create model
+    model, spec, data = sample_robot_biped()
 
-# FK
-data.qpos[:] = np.deg2rad([0,0,-30, 60, -30,0, 0,0,-30, 60, -30,0])
-mujoco.mj_forward(model, data)
-for ee_name in ["right_ee", "left_ee"]:
-    print(f"{ee_name} pos (world):", data.site(ee_name).xpos.copy())
+    # FK
+    data.qpos[:] = np.deg2rad([0,0,-30, 60, -30,0, 0,0,-30, 60, -30,0])
+    mujoco.mj_forward(model, data)
+    for ee_name in ["right_ee", "left_ee"]:
+        print(f"{ee_name} pos (world):", data.site(ee_name).xpos.copy())
 
-# export to xml
-xml_str = spec.to_xml()
-with open("sample_robot_biped.xml", "w", encoding="utf-8") as f:
-    f.write(xml_str)
+    # export to xml
+    xml_str = spec.to_xml()
+    with open("sample_robot_biped.xml", "w", encoding="utf-8") as f:
+        f.write(xml_str)
 
-# display
-viewer = mujoco.viewer.launch_passive(model, data)
-viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = 1 # visualize joints
-viewer.sync()
+    # display
+    global viewer
+    viewer = mujoco.viewer.launch_passive(model, data)
+    viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = 1 # visualize joints
+    viewer.sync()
 
-# inverse kinematics
-def test_inverse_kinamtics():
-    # target frame
-    des_frame = pin.SE3(pin.rpy.rpyToMatrix(0,np.pi/6,0), np.array([0.3, -0.2, -0.6]))
-
-    # add XYZaxis
-    node_dict = {}
-    axis_radius = 0.05; axis_size = 0.2
-    node_name = "world/target"
-    robot.viewer.gui.addXYZaxis(node_name, [1., 0., 0., 1.], axis_radius, axis_size)
-    node_dict[node_name] = des_frame
-
-    # q = robot.inverse_kinematics("wrist2_joint", des_frame)
-    q = robot.inverse_kinematics("rleg_joint6", des_frame, robot.get_joint_names('rleg_joint1', 'rleg_joint6'))
-
-    # display frames
-    for node_name, node in node_dict.items():
-        print(f"node_name: {node_name}")
-        robot.viewer.gui.applyConfiguration(node_name, pin.SE3ToXYZQUATtuple(node))
-    robot.viewer.gui.refresh()
-
-# test_inverse_kinamtics()
+if __name__ == "__main__":
+    test()
