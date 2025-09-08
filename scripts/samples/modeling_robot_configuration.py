@@ -55,6 +55,8 @@ def sample_robot_biped():
 
     # base_link
     base = spec.worldbody.add_body(name="base_link", pos=[0, 0, 0.05])
+    free_joint = base.add_freejoint() # add a free joint
+    free_joint.name = "root"
     base.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, size=[0.05, 0.05, 0.02], rgba=gray)
 
     # rleg_link0
@@ -113,10 +115,11 @@ def sample_robot_biped():
 
 def test():
     # create model
+    global model, data
     model, spec, data = sample_robot_biped()
 
     # FK
-    data.qpos[:] = np.deg2rad([0,0,-30, 60, -30,0, 0,0,-30, 60, -30,0])
+    data.qpos[7:] = np.deg2rad([0,0,-30, 60, -30,0, 0,0,-30, 60, -30,0])
     mujoco.mj_forward(model, data)
     for ee_name in ["right_ee", "left_ee"]:
         print(f"{ee_name} pos (world):", data.site(ee_name).xpos.copy())

@@ -63,7 +63,7 @@ def inverse_kinematics(model, data, site_name, goal_name,
         dq[joint_mask] = dq_used
 
         # update qpos
-        data.qpos[:model.nv] += dq
+        mujoco.mj_integratePos(model, data.qpos, dq, 1.0)
 
     return False, max_iters
 
