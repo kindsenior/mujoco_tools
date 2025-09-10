@@ -70,8 +70,11 @@ def inverse_kinematics(model, data, site_name, goal_name,
 def test_ik():
     # create model
     from modeling_robot_configuration import sample_manipulator
+    spec = mujoco.MjSpec()
+    sample_manipulator(spec)
     global model, data
-    model,spec,data = sample_manipulator()
+    model = spec.compile()
+    data = mujoco.MjData(model)
 
     data.qpos = np.deg2rad([0,0,-30, 60, -30,0,0])
     mujoco.mj_forward(model, data)
