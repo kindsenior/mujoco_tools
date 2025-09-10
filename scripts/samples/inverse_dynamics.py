@@ -1,7 +1,8 @@
 #!/usr/bin/env -S python3 -i
-import numpy as np
-import mujoco
 import modeling_robot_configuration
+import mujoco
+from mujoco_tools.visualization import *
+import numpy as np
 
 # 1) create robot model
 spec = mujoco.MjSpec()
@@ -56,4 +57,18 @@ print("M qacc + bias - passive - constraints=\n",
     (Mqacc + data.qfrc_bias - data.qfrc_passive - data.qfrc_constraint))
 
 # visualize
+viewer.user_scn.ngeom = 0 # reset the start index of geometries
+# display end effector forces
+draw_arrow(viewer, data.site_xpos[model.site("ee").id], F_world, scale=0.01, width=0.01)
+# display joint torques
+for jid in range(model.njnt):
+    if model.jnt_type[jid] != mujoco.mjtJoint.mjJNT_HINGE:
+        continue  # skip non-hinge joints
+
+    # scale joint torques
+    arc_angle = tau_jnt[model.jnt_dofadr[jid]] * 2*np.pi/100.0
+
+    draw_arc(viewer, data.xanchor[jid], data.xaxis[jid], arc_angle,
+             radius=0.05, nseg=16, width=0.006)
+
 viewer.sync()
