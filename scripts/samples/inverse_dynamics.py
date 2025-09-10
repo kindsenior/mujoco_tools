@@ -16,7 +16,7 @@ viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = True
 viewer.sync()
 
 # 2) set states
-data.qpos = [0, 0, 0, np.pi/2, 0, 0, 0]
+data.qpos = [np.pi/4, 0, 0, np.pi/2, 0, 0, 0]
 data.qvel = np.array([np.pi/2, 0, 0, 0, 0, 0, 0])
 
 # 3) forward kinematics
@@ -51,10 +51,9 @@ print("qfrc_bias   =", data.qfrc_bias.copy())
 print("qfrc_applied=", data.qfrc_applied.copy()) # the sum of J^T f
 # qfrc_inverse and the output torque should be the same values (but somehow applied forces are not included)
 print("qfrc_inverse=\n", data.qfrc_inverse.copy())
-print("M qacc + bias - applied - passive - constraints=\n",
-    (Mqacc + data.qfrc_bias - data.qfrc_applied - data.qfrc_passive - data.qfrc_constraint))
-print("M qacc + bias - passive - constraints=\n",
-    (Mqacc + data.qfrc_bias - data.qfrc_passive - data.qfrc_constraint))
+tau_jnt = Mqacc + data.qfrc_bias - data.qfrc_applied - data.qfrc_passive - data.qfrc_constraint
+print("M qacc + bias - applied - passive - constraints=\n", tau_jnt)
+print("M qacc + bias - passive - constraints=\n", (tau_jnt + data.qfrc_applied))
 
 # visualize
 viewer.user_scn.ngeom = 0 # reset the start index of geometries
