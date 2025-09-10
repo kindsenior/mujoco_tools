@@ -10,9 +10,7 @@ green = [0,1,0, 0.6]
 blue  = [0,0,1, 0.6]
 gray  = [0.8, 0.8, 0.8, 0.6]
 
-def sample_manipulator():
-    spec = mujoco.MjSpec()
-
+def sample_manipulator(spec):
     # base_link
     base = spec.worldbody.add_body(name="base_link", pos=[0, 0, 0])
     base.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, size=[0.05, 0.05, 0.02], rgba=gray)
@@ -44,15 +42,9 @@ def sample_manipulator():
     # end effector
     link6.add_site(name="ee", pos=[0, 0, 0.12], size=[0.01, 0.0, 0.0])
 
-    # compile model
-    model = spec.compile()
-    data = mujoco.MjData(model)
+    return spec
 
-    return model, spec, data
-
-def sample_robot_biped():
-    spec = mujoco.MjSpec()
-
+def sample_robot_biped(spec):
     # base_link
     base = spec.worldbody.add_body(name="base_link", pos=[0, 0, 0.05])
     free_joint = base.add_freejoint() # add a free joint
@@ -107,16 +99,17 @@ def sample_robot_biped():
     # left end effector
     lleg_link5.add_site(name="left_ee", pos=[0.12, 0, 0], size=[0.01, 0.0, 0.0])
 
-    # compile model
-    model = spec.compile()
-    data = mujoco.MjData(model)
-
-    return model, spec, data
+    # return spec
 
 def test():
     # create model
+    global spec
+    spec = mujoco.MjSpec()
+    sample_robot_biped(spec)
+
     global model, data
-    model, spec, data = sample_robot_biped()
+    model = spec.compile()
+    data = mujoco.MjData(model)
 
     # FK
     data.qpos[7:] = np.deg2rad([0,0,-30, 60, -30,0, 0,0,-30, 60, -30,0])
