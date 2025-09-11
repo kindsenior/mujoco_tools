@@ -4,10 +4,26 @@ import numpy as np
 common_xml = r"""
 <mujoco model="scene">
   <asset>
+    <!-- background -->
     <texture name="whitegrad" type="skybox" builtin="gradient"
              rgb1=".95 .95 .98" rgb2=".85 .85 .90" width="256" height="256"/>
+
+    <!-- grid floor -->
+    <texture name="gridtex" type="2d" builtin="checker"
+             rgb1="1 1 1" rgb2="0.6 0.6 0.8"
+             width="512" height="512"/>
+    <!-- texture repeat count (X Y). Increasing the number makes the pattern finer -->
+    <material name="gridmat" texture="gridtex" texrepeat="1 1" texuniform="true"/>
   </asset>
-  <worldbody/>
+
+  <worldbody>
+    <!-- ground floor with grid texture -->
+    <geom name="ground" type="plane" size="20 20 0.1" material="gridmat" rgba="1 1 1 1"/>
+
+    <!-- sun light -->
+    <light name="sun" pos="0 0 5" dir="0 0 -1" directional="true"
+           diffuse="1 1 1" specular="0.2 0.2 0.2" ambient="0.5 0.5 0.5"/>
+  </worldbody>
 </mujoco>
 """
 
