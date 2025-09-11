@@ -1,0 +1,33 @@
+<mujoco model="bright_g1_demo">
+  <compiler angle="degree" coordinate="local"/>
+  <option timestep="0.002"/>
+
+  <!-- white background -->
+  <asset>
+    <texture name="white_sky" type="skybox" builtin="gradient"
+             rgb1="1 1 1" rgb2="1 1 1" width="256" height="256"/>
+  </asset>
+
+  <default>
+    <geom group="1" rgba="0.2 0.4 0.8 1"/>
+  </default>
+
+  <worldbody>
+    <!-- ground -->
+    <geom name="ground" type="plane" size="5 5 0.1" rgba="0.95 0.95 0.95 1"/>
+
+    <body name="box1" pos="0 0 0.2">
+      <joint name="free" type="free"/>
+      <geom type="box" size="0.05 0.05 0.05"/>
+    </body>
+
+    <body name="capsule1" pos="0.3 0 0.25">
+      <joint name="hinge1" type="hinge" axis="0 1 0"/>
+      <geom type="capsule" fromto="0 0 0  0 0 0.2" size="0.04"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="hinge_m" joint="hinge1" ctrlrange="-1 1" gear="1"/>
+  </actuator>
+</mujoco>
