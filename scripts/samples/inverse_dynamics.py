@@ -6,6 +6,7 @@ import numpy as np
 
 # 1) create robot model
 spec = mujoco.MjSpec()
+spec.from_string(common_xml)
 modeling_robot_configuration.sample_manipulator(spec)
 model = spec.compile()
 data = mujoco.MjData(model)

@@ -1,6 +1,16 @@
 import mujoco
 import numpy as np
 
+common_xml = r"""
+<mujoco model="scene">
+  <asset>
+    <texture name="whitegrad" type="skybox" builtin="gradient"
+             rgb1=".95 .95 .98" rgb2=".85 .85 .90" width="256" height="256"/>
+  </asset>
+  <worldbody/>
+</mujoco>
+"""
+
 def draw_arrow(viewer, arrow_origin, arrow_vector, scale=0.01, width=0.01, rgba=(0.9, 0.2, 0.2, 1.0)):
     """
     arrow_origin: the origin point of arrow [3]
