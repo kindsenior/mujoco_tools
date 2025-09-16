@@ -11,6 +11,7 @@ def test():
     # create model
     global spec
     spec = mujoco.MjSpec()
+    spec.from_string(common_xml)
     sample_robot_biped(spec)
 
     global model, data
@@ -18,7 +19,8 @@ def test():
     data = mujoco.MjData(model)
 
     # FK
-    data.qpos[7:] = np.deg2rad([0,0,-30, 60, -30,0, 0,0,-30, 60, -30,0])
+    data.qpos[0:3] = [0,0,0.5] # root pos
+    data.qpos[7:] = np.deg2rad([0,0,-30, 60, -30,0, 0,0,-30, 60, -30,0]) # angles
     mujoco.mj_forward(model, data)
     for ee_name in ["right_ee", "left_ee"]:
         print(f"{ee_name} pos (world):", data.site(ee_name).xpos.copy())
