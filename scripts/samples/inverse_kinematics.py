@@ -1,6 +1,7 @@
 #!/usr/bin/env -S python3 -i
 import numpy as np
 import mujoco
+import mujoco.viewer
 
 def inverse_kinematics(model, data, site_name, goal_name,
                     max_iters=200, tol_pos=1e-5, damping=1e-3, step_size=1.0,
@@ -69,7 +70,7 @@ def inverse_kinematics(model, data, site_name, goal_name,
 
 def test_ik():
     # create model
-    from modeling_robot_configuration import sample_manipulator
+    from mujoco_tools.modeling import sample_manipulator
     spec = mujoco.MjSpec()
     sample_manipulator(spec)
     global model, data

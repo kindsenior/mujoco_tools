@@ -1,13 +1,14 @@
 #!/usr/bin/env -S python3 -i
-import modeling_robot_configuration
 import mujoco
+import mujoco.viewer
+from mujoco_tools.modeling import sample_manipulator
 from mujoco_tools.visualization import *
 import numpy as np
 
 # 1) create robot model
 spec = mujoco.MjSpec()
 spec.from_string(common_xml)
-modeling_robot_configuration.sample_manipulator(spec)
+sample_manipulator(spec)
 model = spec.compile()
 data = mujoco.MjData(model)
 
