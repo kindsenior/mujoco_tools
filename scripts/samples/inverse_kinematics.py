@@ -8,12 +8,15 @@ def test_ik():
     # create model
     from mujoco_tools.modeling import sample_manipulator
     spec = mujoco.MjSpec()
-    sample_manipulator(spec)
+    sample_manipulator(spec, free_joint=True) # add a free joint to the base link
     global model, data
     model = spec.compile()
     data = mujoco.MjData(model)
 
-    data.qpos = np.deg2rad([0,0,-30, 60, -30,0,0])
+    q_mask, v_mask, _, _ = gather_indices_path(model, "link0", "link6") # remove the base free joint for IK
+
+    # set initial pose
+    data.qpos[q_mask] = np.deg2rad([0,0,-30, 60, -30,0,0])
     mujoco.mj_forward(model, data)
 
     # add the goal mocap
@@ -30,7 +33,7 @@ def test_ik():
     data.mocap_quat[mid] = [1, 0, 0, 0]
 
     # IK
-    ok, iters = inverse_kinematics(model, data, site_name="ee", goal_name="ik_goal",
+    ok, iters = inverse_kinematics(model, data, site_name="ee", goal_name="ik_goal", joint_mask=v_mask,
                                 max_iters=200, tol_pos=1e-6, damping=1e-3, step_size=0.7)
     print("IK success:", ok, "iters:", iters)
 

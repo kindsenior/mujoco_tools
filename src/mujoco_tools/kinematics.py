@@ -1,6 +1,55 @@
 import mujoco
 import numpy as np
 
+def gather_indices_path(model, start_body_name, end_body_name):
+    """gather joint indices on the path from start to end body"""
+    # get body ids
+    bid_start = model.body(start_body_name).id
+    bid_end   = model.body(end_body_name).id
+
+    # search path from start to end by ascending parents
+    path = []
+    bid = bid_end
+    for _ in range(model.nbody + 1): # prevent infinite loop
+        path.append(bid)
+        if bid == bid_start:
+            break
+        parent = model.body_parentid[bid]
+        if parent == bid or bid == 0: # reached the world(parent=bid=0) or the abnormal cases(parent is self)
+            raise ValueError(
+                f"body '{start_body_name}' is not an ancestor of body '{end_body_name}'"
+            )
+        bid = parent
+    else:
+        raise RuntimeError("Ascending parents did not converge (model inconsistency?)")
+    path = path[::-1] # reverse to get from start to end
+
+    # gather joint ids on the path
+    joint_ids = []
+    for body in path:
+        adr = model.body_jntadr[body]
+        num = model.body_jntnum[body] # body_jntnum returns the number of joints between the body and its parent
+        for j in range(num):
+            joint_ids.append(adr + j)
+
+    # gather qpos_idx, dof_idx depending on joint type
+    qpos_idx, dof_idx = [], []
+    for jid in joint_ids:
+        jtype = model.jnt_type[jid]
+        qpos_adr  = model.jnt_qposadr[jid]
+        dof_adr  = model.jnt_dofadr[jid]
+        if jtype == mujoco.mjtJoint.mjJNT_FREE:
+            qpos_idx += list(range(qpos_adr, qpos_adr+7))
+            dof_idx  += list(range(dof_adr, dof_adr+6))
+        elif jtype == mujoco.mjtJoint.mjJNT_BALL:
+            qpos_idx += list(range(qpos_adr, qpos_adr+4))
+            dof_idx  += list(range(dof_adr, dof_adr+3))
+        else:  # hinge or slide
+            qpos_idx.append(qpos_adr)
+            dof_idx.append(dof_adr)
+
+    return np.array(qpos_idx), np.array(dof_idx), joint_ids, path
+
 def inverse_kinematics(model, data, site_name, goal_name,
                     max_iters=200, tol_pos=1e-5, damping=1e-3, step_size=1.0,
                     joint_mask=None):
