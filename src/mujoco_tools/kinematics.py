@@ -77,7 +77,7 @@ def gather_indices_by_prefix(model, joint_prefix):
             joint_ids)
 
 def inverse_kinematics(model, data, site_name, goal_name,
-                    max_iters=200, tol_pos=1e-5, damping=1e-3, step_size=1.0,
+                    *, max_iters=200, tol_pos=1e-5, tol_rot=1e-3, damping=1e-3, step_size=1.0,
                     joint_mask=None):
     """
     - site_name: the target site for movement
@@ -94,29 +94,39 @@ def inverse_kinematics(model, data, site_name, goal_name,
     if bid >= 0:
         mocapid = model.body_mocapid[bid]  # -1 when not mocap
         if mocapid >= 0:
-            target_pos = data.mocap_pos[mocapid].copy()
-            target_quat = data.mocap_quat[mocapid].copy()
+            goal_pos = data.mocap_pos[mocapid].copy()
+            goal_quat = data.mocap_quat[mocapid].copy()
+        else:
+            raise ValueError(f"mocap body '{goal_name}' is not a mocap")
+    else:
+        raise ValueError(f"body '{goal_name}' not found")
 
     # joint mask
     if joint_mask is None:
         joint_mask = np.ones(model.nv, dtype=bool)
 
     # ik loop
+    ik_result = False
     for it in range(max_iters):
         mujoco.mj_forward(model, data)
 
-        # error to target pos
+        # error to goal pos
         cur_pos = data.site_xpos[site_id].copy()
-        err_pos = target_pos - cur_pos
-        if np.linalg.norm(err_pos) < tol_pos:
-            return True, it
-        # error to target rot
+        err_pos = goal_pos - cur_pos
+        # error to goal rot
         cur_rot = data.site_xmat[site_id].copy()
         cur_quat = np.zeros(4)
         mujoco.mju_mat2Quat(cur_quat, cur_rot.reshape(-1))
         err_rot = np.zeros(3)
-        mujoco.mju_subQuat(err_rot, target_quat, cur_quat)
-        err = np.hstack((err_pos, err_rot))
+        mujoco.mju_subQuat(err_rot, goal_quat, cur_quat)
+        # error
+        w_pos = 1.0 # [1/m]
+        w_rot = 0.1 # [1/rad]
+        err = np.hstack((w_pos*err_pos, w_rot*err_rot))
+        # check convergence
+        if np.linalg.norm(err_pos) < tol_pos and np.linalg.norm(err_rot) < tol_rot:
+            ik_result = True
+            break
 
         # jacobi matrix
         Jp = np.zeros((3, model.nv))
@@ -139,4 +149,4 @@ def inverse_kinematics(model, data, site_name, goal_name,
         # update qpos
         mujoco.mj_integratePos(model, data.qpos, dq, 1.0)
 
-    return False, max_iters
+    return ik_result, it
