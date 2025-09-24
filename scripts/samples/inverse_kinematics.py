@@ -1,46 +1,56 @@
 #!/usr/bin/env -S python3 -i
+import logging
 import numpy as np
 import mujoco
 import mujoco.viewer
 from mujoco_tools.kinematics import *
 
-def test_ik():
+def test_ik(*, pos=[0.3,0.3,0.3], rpy=[0,0,np.pi/4], target_name="ee", goal_name="ik_goal", v_mask=None):
+    if v_mask is None:
+        v_mask = np.ones(model.nv, dtype=bool)
+
+    # set target
+    bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, goal_name)
+    mid = model.body_mocapid[bid] # convert body id to mocap id (mocaps also belong to body class)
+    data.mocap_pos[mid] = pos
+    mujoco.mju_euler2Quat(data.mocap_quat[mid], rpy, "xyz")
+    logging.info("goal pos: %s", data.mocap_pos[mid])
+    logging.info("goal quat: %s", data.mocap_quat[mid])
+
+    # IK
+    viewer.user_scn.ngeom = 0 # reset the number of geoms
+    ok, iters = inverse_kinematics(model, data, site_name=target_name, goal_name=goal_name, joint_mask=v_mask,
+                                   max_iters=200, tol_pos=1e-6, damping=1e-3, step_size=0.7,
+                                   viewer=viewer)
+    print("IK success:", ok, "iters:", iters)
+
+    viewer.sync()
+
+if __name__ == "__main__":
     # create model
     from mujoco_tools.modeling import sample_manipulator
     spec = mujoco.MjSpec()
     sample_manipulator(spec, free_joint=True) # add a free joint to the base link
+
+    # add the goal mocap
+    goal_body = spec.worldbody.add_body(name="ik_goal", mocap=True) # set to mocap body
+
+    # build
     global model, data
     model = spec.compile()
     data = mujoco.MjData(model)
 
+    global q_mask, v_mask
     q_mask, v_mask, _, _ = gather_indices_path(model, "link0", "link6") # remove the base free joint for IK
 
     # set initial pose
     data.qpos[q_mask] = np.deg2rad([0,0,-30, 60, -30,0,0])
     mujoco.mj_forward(model, data)
 
-    # add the goal mocap
-    goal_body = spec.worldbody.add_body(name="ik_goal", mocap=True) # set to mocap body
-
-    # rebuild
-    model = spec.compile()
-    data = mujoco.MjData(model)
-
-    # set target
-    bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "ik_goal")
-    mid = model.body_mocapid[bid] # convert body id to mocap id (mocaps also belong to body class)
-    data.mocap_pos[mid] = [0.3, 0.3, 0.3]
-    data.mocap_quat[mid] = [1, 0, 0, 0]
-
-    # IK
-    ok, iters = inverse_kinematics(model, data, site_name="ee", goal_name="ik_goal", joint_mask=v_mask,
-                                max_iters=200, tol_pos=1e-6, damping=1e-3, step_size=0.7)
-    print("IK success:", ok, "iters:", iters)
-
+    # visualize
     global viewer
     viewer = mujoco.viewer.launch_passive(model, data)
     viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = 1 # visualize joints
-    viewer.sync()
 
-if __name__ == "__main__":
-    test_ik()
+    # test IK
+    test_ik(target_name="ee", goal_name="ik_goal", v_mask=v_mask)
