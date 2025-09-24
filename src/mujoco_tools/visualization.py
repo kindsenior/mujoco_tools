@@ -27,7 +27,8 @@ common_xml = r"""
 </mujoco>
 """
 
-def draw_arrow(viewer, arrow_origin, arrow_vector, scale=0.01, width=0.01, rgba=(0.9, 0.2, 0.2, 1.0)):
+def draw_arrow(viewer, arrow_origin, arrow_vector,
+                *, scale=0.01, width=0.01, rgba=(0.9, 0.2, 0.2, 1.0), arrow_type=mujoco.mjtGeom.mjGEOM_ARROW):
     """
     arrow_origin: the origin point of arrow [3]
     arrow_vector: vector [3]
@@ -43,13 +44,22 @@ def draw_arrow(viewer, arrow_origin, arrow_vector, scale=0.01, width=0.01, rgba=
     mujoco.mjv_makeConnector(
         # geom,
         scene.geoms[scene.ngeom],
-        mujoco.mjtGeom.mjGEOM_ARROW,  # 矢印
+        arrow_type,  # arrow type
         width,
         float(arrow_origin[0]), float(arrow_origin[1]), float(arrow_origin[2]),
         float(arrow_head[0]), float(arrow_head[1]), float(arrow_head[2])
     )
     scene.geoms[scene.ngeom].rgba[:] = rgba
     scene.ngeom += 1
+
+def draw_frame(viewer, origin_pos, rot_mat, *, scale=0.1, width=0.01, alpha=1.0, array_type=mujoco.mjtGeom.mjGEOM_ARROW1):
+    # rot_mat: 3x3 rotation matrix
+    draw_arrow(viewer, origin_pos, rot_mat[:,0],
+                scale=scale, width=width, rgba=(0.9, 0.2, 0.2, alpha), arrow_type=array_type) # x-axis (red)
+    draw_arrow(viewer, origin_pos, rot_mat[:,1],
+                scale=scale, width=width, rgba=(0.2, 0.9, 0.2, alpha), arrow_type=array_type) # y-axis (green)
+    draw_arrow(viewer, origin_pos, rot_mat[:,2],
+                scale=scale, width=width, rgba=(0.2, 0.2, 0.9, alpha), arrow_type=array_type) # z-axis (blue)
 
 def draw_arc(viewer, arc_center, arc_axis, central_angle, 
             radius=0.05, nseg=12, width=0.004, rgba_pos=(0.2,0.6,1.0,1.0), rgba_neg=(1.0,0.5,0.2,1.0)):

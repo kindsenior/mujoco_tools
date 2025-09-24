@@ -1,4 +1,5 @@
 import mujoco
+from mujoco_tools.visualization import *
 import numpy as np
 
 def _extend_indices_for_joint(model, jid, qpos_idx, dof_idx):
@@ -78,7 +79,7 @@ def gather_indices_by_prefix(model, joint_prefix):
 
 def inverse_kinematics(model, data, site_name, goal_name,
                     *, max_iters=200, tol_pos=1e-5, tol_rot=1e-3, damping=1e-3, step_size=1.0,
-                    joint_mask=None):
+                    joint_mask=None, viewer=None):
     """
     - site_name: the target site for movement
     - goal_name: the goal site for movement
@@ -148,5 +149,14 @@ def inverse_kinematics(model, data, site_name, goal_name,
 
         # update qpos
         mujoco.mj_integratePos(model, data.qpos, dq, 1.0)
+
+    # visualize target and goal
+    if viewer is not None:
+        # target
+        draw_frame(viewer, data.site_xpos[site_id], data.site_xmat[site_id].reshape((3,3)), scale=0.15, width=0.01)
+        # goal
+        goal_rot = np.zeros((9,))
+        mujoco.mju_quat2Mat(goal_rot, goal_quat)
+        draw_frame(viewer, goal_pos, goal_rot.reshape((3,3)), scale=0.2, width=0.01, alpha=0.3)
 
     return ik_result, it
