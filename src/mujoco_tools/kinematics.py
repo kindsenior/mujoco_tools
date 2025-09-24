@@ -1,6 +1,21 @@
 import mujoco
 import numpy as np
 
+def _extend_indices_for_joint(model, jid, qpos_idx, dof_idx):
+    """extend qpos_idx and dof_idx depending on joint type by adding indices of multiple DoF joints"""
+    jtype = model.jnt_type[jid]
+    qadr  = model.jnt_qposadr[jid]
+    dadr  = model.jnt_dofadr[jid]
+    if jtype == mujoco.mjtJoint.mjJNT_FREE:
+        qpos_idx.extend(range(qadr, qadr + 7))
+        dof_idx .extend(range(dadr, dadr + 6))
+    elif jtype == mujoco.mjtJoint.mjJNT_BALL:
+        qpos_idx.extend(range(qadr, qadr + 4))
+        dof_idx .extend(range(dadr, dadr + 3))
+    else:  # HINGE or SLIDE
+        qpos_idx.append(qadr)
+        dof_idx .append(dadr)
+
 def gather_indices_path(model, start_body_name, end_body_name):
     """gather joint indices on the path from start to end body"""
     # get body ids
@@ -35,20 +50,31 @@ def gather_indices_path(model, start_body_name, end_body_name):
     # gather qpos_idx, dof_idx depending on joint type
     qpos_idx, dof_idx = [], []
     for jid in joint_ids:
-        jtype = model.jnt_type[jid]
-        qpos_adr  = model.jnt_qposadr[jid]
-        dof_adr  = model.jnt_dofadr[jid]
-        if jtype == mujoco.mjtJoint.mjJNT_FREE:
-            qpos_idx += list(range(qpos_adr, qpos_adr+7))
-            dof_idx  += list(range(dof_adr, dof_adr+6))
-        elif jtype == mujoco.mjtJoint.mjJNT_BALL:
-            qpos_idx += list(range(qpos_adr, qpos_adr+4))
-            dof_idx  += list(range(dof_adr, dof_adr+3))
-        else:  # hinge or slide
-            qpos_idx.append(qpos_adr)
-            dof_idx.append(dof_adr)
+        _extend_indices_for_joint(model, jid, qpos_idx, dof_idx)
 
     return np.array(qpos_idx), np.array(dof_idx), joint_ids, path
+
+def gather_indices_by_prefix(model, joint_prefix):
+    """
+    Gather joint indices whose names start with the given prefix.
+
+    Returns:
+        qpos_idx (ndarray[int])  : the indices of qpos (sorted, no duplicates)
+        dof_idx   (ndarray[int]) : the indices of dof (sorted, no duplicates)
+        joint_ids(list[int])     : the IDs of the corresponding joints (unordered)
+    """
+    joint_ids = []
+    qpos_idx, dof_idx = [], []
+
+    for jid in range(model.njnt):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, jid)
+        if name and name.startswith(joint_prefix):
+            joint_ids.append(jid)
+            _extend_indices_for_joint(model, jid, qpos_idx, dof_idx)
+
+    return (np.array(sorted(set(qpos_idx))),
+            np.array(sorted(set(dof_idx))),
+            joint_ids)
 
 def inverse_kinematics(model, data, site_name, goal_name,
                     max_iters=200, tol_pos=1e-5, damping=1e-3, step_size=1.0,
