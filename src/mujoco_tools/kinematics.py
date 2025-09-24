@@ -79,7 +79,7 @@ def gather_indices_by_prefix(model, joint_prefix):
 
 def inverse_kinematics(model, data, site_name, goal_name,
                     *, max_iters=200, tol_pos=1e-5, tol_rot=1e-3, damping=1e-3, step_size=1.0,
-                    joint_mask=None, viewer=None):
+                    joint_mask=None, element_indices=[0,1,2,3,4,5], viewer=None):
     """
     - site_name: the target site for movement
     - goal_name: the goal site for movement
@@ -108,24 +108,31 @@ def inverse_kinematics(model, data, site_name, goal_name,
 
     # ik loop
     ik_result = False
+    num_elements = len(element_indices)
+    if num_elements == 0:
+        raise ValueError("element_indices is empty")
+    pos_indices = list(set(range(0, 3)) & set(element_indices)) # select position indices
+    rot_indices = list(set(range(3, 6)) & set(element_indices)) # select rotation indices
     for it in range(max_iters):
         mujoco.mj_forward(model, data)
 
+        # error
+        err = np.zeros(6)
         # error to goal pos
         cur_pos = data.site_xpos[site_id].copy()
-        err_pos = goal_pos - cur_pos
+        err[0:3] = goal_pos - cur_pos
         # error to goal rot
         cur_rot = data.site_xmat[site_id].copy()
         cur_quat = np.zeros(4)
         mujoco.mju_mat2Quat(cur_quat, cur_rot.reshape(-1))
-        err_rot = np.zeros(3)
-        mujoco.mju_subQuat(err_rot, goal_quat, cur_quat)
+        err[3:6] = np.zeros(3)
+        mujoco.mju_subQuat(err[3:6], goal_quat, cur_quat)
         # error
         w_pos = 1.0 # [1/m]
         w_rot = 0.1 # [1/rad]
-        err = np.hstack((w_pos*err_pos, w_rot*err_rot))
+        err_weighted = np.hstack((w_pos*err[0:3], w_rot*err[3:6]))[element_indices]
         # check convergence
-        if np.linalg.norm(err_pos) < tol_pos and np.linalg.norm(err_rot) < tol_rot:
+        if np.linalg.norm(err[pos_indices]) < tol_pos and np.linalg.norm(err[rot_indices]) < tol_rot:
             ik_result = True
             break
 
@@ -136,12 +143,12 @@ def inverse_kinematics(model, data, site_name, goal_name,
         J = np.vstack((Jp, Jr))
 
         # extract used DoF
-        J = J[:, joint_mask] # 3 x nv_used
+        J = J[element_indices,:][:, joint_mask] # select rows and columns
 
-        # DLS: dq = J^T (J J^T + λ^2 I)^{-1} * err
+        # DLS: dq = J^T (J J^T + λ^2 I)^{-1} * err_weighted
         lam2 = damping * damping
-        A = J @ J.T + lam2 * np.eye(6)
-        dq_used = J.T @ np.linalg.solve(A, err * step_size)
+        A = J @ J.T + lam2 * np.eye(num_elements)
+        dq_used = J.T @ np.linalg.solve(A, err_weighted * step_size)
 
         # extend to full DoF
         dq = np.zeros(model.nv)

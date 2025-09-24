@@ -5,10 +5,7 @@ import mujoco
 import mujoco.viewer
 from mujoco_tools.kinematics import *
 
-def test_ik(*, pos=[0.3,0.3,0.3], rpy=[0,0,np.pi/4], target_name="ee", goal_name="ik_goal", v_mask=None):
-    if v_mask is None:
-        v_mask = np.ones(model.nv, dtype=bool)
-
+def test_ik(*, pos=[0.3,0.3,0.3], rpy=[0,0,np.pi/4], target_name="ee", goal_name="ik_goal", **kwargs):
     # set target
     bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, goal_name)
     mid = model.body_mocapid[bid] # convert body id to mocap id (mocaps also belong to body class)
@@ -19,9 +16,9 @@ def test_ik(*, pos=[0.3,0.3,0.3], rpy=[0,0,np.pi/4], target_name="ee", goal_name
 
     # IK
     viewer.user_scn.ngeom = 0 # reset the number of geoms
-    ok, iters = inverse_kinematics(model, data, site_name=target_name, goal_name=goal_name, joint_mask=v_mask,
+    ok, iters = inverse_kinematics(model, data, site_name=target_name, goal_name=goal_name,
                                    max_iters=200, tol_pos=1e-6, damping=1e-3, step_size=0.7,
-                                   viewer=viewer)
+                                   viewer=viewer, **kwargs)
     print("IK success:", ok, "iters:", iters)
 
     viewer.sync()
@@ -53,4 +50,7 @@ if __name__ == "__main__":
     viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = 1 # visualize joints
 
     # test IK
-    test_ik(target_name="ee", goal_name="ik_goal", v_mask=v_mask)
+    test_ik(target_name="ee", goal_name="ik_goal", joint_mask=v_mask)
+
+    # test IK with selected elements (position only)
+    test_ik(target_name="ee", goal_name="ik_goal", joint_mask=v_mask, element_indices=[0,1,2]) # position only
