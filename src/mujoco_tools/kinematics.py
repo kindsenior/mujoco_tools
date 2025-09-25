@@ -115,8 +115,8 @@ def inverse_kinematics(model, data, site_name, goal_name,
     num_elements = len(element_indices)
     if num_elements == 0:
         raise ValueError("element_indices is empty")
-    pos_indices = list(set(range(0, 3)) & set(element_indices)) # select position indices
-    rot_indices = list(set(range(3, 6)) & set(element_indices)) # select rotation indices
+    pos_indices = sorted(set(range(0, 3)) & set(element_indices)) # select position indices
+    rot_indices = sorted(set(range(3, 6)) & set(element_indices)) # select rotation indices
 
     logger.info(f"IK start")
     logger.info(f" site_name '{site_name}' (site_id {site_id}), goal_name '{goal_name}' (mocap id {mocapid})")
