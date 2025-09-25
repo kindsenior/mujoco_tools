@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 import mujoco
 from mujoco_tools.visualization import *
 import numpy as np
@@ -113,6 +115,17 @@ def inverse_kinematics(model, data, site_name, goal_name,
         raise ValueError("element_indices is empty")
     pos_indices = list(set(range(0, 3)) & set(element_indices)) # select position indices
     rot_indices = list(set(range(3, 6)) & set(element_indices)) # select rotation indices
+
+    logger.info(f"IK start")
+    logger.info(f" site_name '{site_name}' (site_id {site_id}), goal_name '{goal_name}' (mocap id {mocapid})")
+    logger.info(f" goal_pos {goal_pos}, goal quat {goal_quat}")
+    logger.info(f" joint_mask {joint_mask}")
+    logger.info(f" element_indices {element_indices}")
+    logger.info(f" pos_indices {pos_indices}, rot_indices {rot_indices}")
+    logger.info(f" num_elements {num_elements}")
+    logger.info(f" max_iters {max_iters}, tol_pos {tol_pos}, tol_rot {tol_rot}, damping {damping}, step_size {step_size}")
+    logger.info(f" weight_pos {weight_pos}, weight_rot {weight_rot}")
+
     for it in range(max_iters):
         mujoco.mj_forward(model, data)
 
@@ -157,6 +170,8 @@ def inverse_kinematics(model, data, site_name, goal_name,
         # update qpos
         mujoco.mj_integratePos(model, data.qpos, dq, 1.0)
 
+        logger.debug(f"IK iter {it}: pos err {np.linalg.norm(err[pos_indices])}, rot err {np.linalg.norm(err[rot_indices])}")
+
     # visualize target and goal
     if viewer is not None:
         # target
@@ -165,5 +180,7 @@ def inverse_kinematics(model, data, site_name, goal_name,
         goal_rot = np.zeros((9,))
         mujoco.mju_quat2Mat(goal_rot, goal_quat)
         draw_frame(viewer, goal_pos, goal_rot.reshape((3,3)), scale=0.2, width=0.01, alpha=0.3)
+
+    logger.info(f"IK iter {it}: pos err {np.linalg.norm(err[pos_indices])}, rot err {np.linalg.norm(err[rot_indices])}")
 
     return ik_result, it
