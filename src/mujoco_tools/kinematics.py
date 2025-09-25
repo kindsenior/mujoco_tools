@@ -81,7 +81,9 @@ def gather_indices_by_prefix(model, joint_prefix):
 
 def inverse_kinematics(model, data, site_name, goal_name,
                     *, max_iters=200, tol_pos=1e-5, tol_rot=1e-3, damping=1e-3, step_size=1.0,
-                    joint_mask=None, element_indices=[0,1,2,3,4,5], viewer=None):
+                    weight_pos=1.0, weight_rot=0.1,
+                    joint_mask=None, element_indices=[0,1,2,3,4,5], viewer=None,
+                    **kwargs):
     """
     - site_name: the target site for movement
     - goal_name: the goal site for movement
@@ -158,10 +160,12 @@ def inverse_kinematics(model, data, site_name, goal_name,
         # extract used DoF
         J = J[element_indices,:][:, joint_mask] # select rows and columns
 
-        # DLS: dq = J^T (J J^T + λ^2 I)^{-1} * err_weighted
+        # DLS: dq = (J^T W J + λ^2 I)^{-1} * J^T W err
+        W = np.diag([weight_pos]*3 + [weight_rot]*3)[element_indices,:][:,element_indices]
         lam2 = damping * damping
-        A = J @ J.T + lam2 * np.eye(num_elements)
-        dq_used = J.T @ np.linalg.solve(A, err_weighted * step_size)
+        H = J.T @ W @ J + lam2 * np.eye(J.shape[1])
+        g = J.T @ W @ err[element_indices]
+        dq_used = np.linalg.solve(H, g * step_size)
 
         # extend to full DoF
         dq = np.zeros(model.nv)
