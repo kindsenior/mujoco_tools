@@ -138,14 +138,12 @@ def inverse_kinematics(model, data, site_name, goal_name,
         err[0:3] = goal_pos - cur_pos
         # error to goal rot
         cur_rot = data.site_xmat[site_id].copy()
-        cur_quat = np.zeros(4)
-        mujoco.mju_mat2Quat(cur_quat, cur_rot.reshape(-1))
-        err[3:6] = np.zeros(3)
-        mujoco.mju_subQuat(err[3:6], goal_quat, cur_quat)
-        # error
-        w_pos = 1.0 # [1/m]
-        w_rot = 0.1 # [1/rad]
-        err_weighted = np.hstack((w_pos*err[0:3], w_rot*err[3:6]))[element_indices]
+        cur_quat = np.zeros(4); mujoco.mju_mat2Quat(cur_quat, cur_rot.reshape(-1))
+        qinv = np.zeros(4); mujoco.mju_negQuat(qinv, cur_quat) # conj
+        q_err = np.zeros(4); mujoco.mju_mulQuat(q_err, goal_quat, qinv) # rotation error (world): q_err = q_goal * conj(q_cur)
+        if q_err[0] < 0: # ensure the same side hemisphere for shortest path
+            q_err = -q_err
+        mujoco.mju_quat2Vel(err[3:6], q_err, 1.0) # convert quat diff -> angular velocity (dt=1): world-aligned
         # check convergence
         if np.linalg.norm(err[pos_indices]) < tol_pos and np.linalg.norm(err[rot_indices]) < tol_rot:
             ik_result = True
