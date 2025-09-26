@@ -139,11 +139,15 @@ def inverse_kinematics(model, data, site_name, goal_name,
         # error to goal rot
         cur_rot = data.site_xmat[site_id].copy()
         cur_quat = np.zeros(4); mujoco.mju_mat2Quat(cur_quat, cur_rot.reshape(-1))
-        qinv = np.zeros(4); mujoco.mju_negQuat(qinv, cur_quat) # conj
-        q_err = np.zeros(4); mujoco.mju_mulQuat(q_err, goal_quat, qinv) # rotation error (world): q_err = q_goal * conj(q_cur)
-        if q_err[0] < 0: # ensure the same side hemisphere for shortest path
-            q_err = -q_err
-        mujoco.mju_quat2Vel(err[3:6], q_err, 1.0) # convert quat diff -> angular velocity (dt=1): world-aligned
+        # # use quat2Vel
+        # qinv = np.zeros(4); mujoco.mju_negQuat(qinv, cur_quat) # conj
+        # q_err = np.zeros(4); mujoco.mju_mulQuat(q_err, goal_quat, qinv) # rotation error (world): q_err = q_goal * conj(q_cur)
+        # if q_err[0] < 0: # ensure the same side hemisphere for shortest path
+        #     q_err = -q_err
+        # mujoco.mju_quat2Vel(err[3:6], q_err, 1.0) # convert quat diff -> angular velocity (dt=1): world-aligned
+        # use subQuat
+        mujoco.mju_subQuat(err[3:6], goal_quat, cur_quat) # rotation error (cur_quat * quat(err) = goal_quat)
+        err[3:6] = cur_rot.reshape((3,3)) @ err[3:6] # subQuat is in local frame, convert to world-aligned
         # check convergence
         if np.linalg.norm(err[pos_indices]) < tol_pos and np.linalg.norm(err[rot_indices]) < tol_rot:
             ik_result = True
