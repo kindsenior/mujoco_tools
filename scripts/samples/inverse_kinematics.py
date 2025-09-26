@@ -24,6 +24,10 @@ def test_ik(*, pos=[0.3,0.3,0.3], rpy=[0,0,np.pi/4], target_name="ee", goal_name
     viewer.sync()
 
 if __name__ == "__main__":
+    # setup logging
+    logger = logging.getLogger("mujoco_tools.kinematics")
+    logger.setLevel(logging.INFO)
+
     # create model
     from mujoco_tools.modeling import sample_manipulator
     spec = mujoco.MjSpec()
@@ -50,7 +54,9 @@ if __name__ == "__main__":
     viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = 1 # visualize joints
 
     # test IK
-    test_ik(target_name="ee", goal_name="ik_goal", joint_mask=v_mask)
+    test_ik(target_name="ee", goal_name="ik_goal", joint_mask=v_mask,
+            pos=[0.3,0.3,0.3], rpy=[0,0,np.pi/4]) # position + orientation
 
     # test IK with selected elements (position only)
-    test_ik(target_name="ee", goal_name="ik_goal", joint_mask=v_mask, element_indices=[0,1,2]) # position only
+    test_ik(target_name="ee", goal_name="ik_goal", joint_mask=v_mask, element_indices=[0,1,2],
+            pos=[0.3,0.2,0.3], rpy=[0,0,np.pi/4]) # position only
