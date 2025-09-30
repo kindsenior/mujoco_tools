@@ -57,27 +57,28 @@ def gather_indices_path(model, start_body_name, end_body_name):
 
     return np.array(qpos_idx), np.array(dof_idx), joint_ids, path
 
-def gather_indices_by_prefix(model, joint_prefix):
+def gather_joints_by_prefix(model, joint_prefix):
     """
     Gather joint indices whose names start with the given prefix.
 
     Returns:
         qpos_idx (ndarray[int])  : the indices of qpos (sorted, no duplicates)
         dof_idx   (ndarray[int]) : the indices of dof (sorted, no duplicates)
-        joint_ids(list[int])     : the IDs of the corresponding joints (unordered)
+        joint_names(list[str])   : the names of the corresponding joints (unordered)
     """
-    joint_ids = []
     qpos_idx, dof_idx = [], []
+    joint_names = []
 
-    for jid in range(model.njnt):
-        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, jid)
+    for idx in range(model.njnt):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, idx)
         if name and name.startswith(joint_prefix):
-            joint_ids.append(jid)
-            _extend_indices_for_joint(model, jid, qpos_idx, dof_idx)
+            joint_names.append(name)
+            _extend_indices_for_joint(model, idx, qpos_idx, dof_idx)
 
     return (np.array(sorted(set(qpos_idx))),
             np.array(sorted(set(dof_idx))),
-            joint_ids)
+            joint_names,
+            )
 
 def inverse_kinematics(model, data, site_name, goal_name,
                     *, max_iters=200, tol_pos=1e-5, tol_rot=1e-3, damping=1e-3, step_size=1.0,
