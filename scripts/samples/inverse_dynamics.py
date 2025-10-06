@@ -4,6 +4,7 @@ import mujoco.viewer
 from mujoco_tools.modeling import sample_manipulator
 from mujoco_tools.visualization import *
 import numpy as np
+np.set_printoptions(linewidth=260)
 
 # 1) create robot model
 spec = mujoco.MjSpec()
@@ -48,13 +49,16 @@ print("nv=", model.nv)
 print("qacc        =", data.qacc.copy())
 Mqacc = np.zeros(model.nv)
 mujoco.mj_mulM(model, data, Mqacc, data.qacc)
-print("M qacc =", Mqacc)
-print("qfrc_bias   =", data.qfrc_bias.copy())
-
-print("\n")
-print("qfrc_applied=", data.qfrc_applied.copy()) # the sum of J^T f
+print("M qacc =\n", Mqacc)
+print("qfrc_bias   =\n", data.qfrc_bias.copy())
+print("qfrc_passive=\n", data.qfrc_passive.copy())
+print("qfrc_constraint=\n", data.qfrc_constraint.copy())
+print("qfrc_applied=\n", data.qfrc_applied.copy()) # the sum of J^T f
 # qfrc_inverse and the output torque should be the same values (but somehow applied forces are not included)
 print("qfrc_inverse=\n", data.qfrc_inverse.copy())
+
+print("\n")
+print("Check the error of inverse dynamics")
 tau_jnt = Mqacc + data.qfrc_bias - data.qfrc_applied - data.qfrc_passive - data.qfrc_constraint
 print("M qacc + bias - applied - passive - constraints=\n", tau_jnt)
 print("M qacc + bias - passive - constraints=\n", (tau_jnt + data.qfrc_applied))
