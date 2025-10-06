@@ -20,11 +20,11 @@ viewer.sync()
 
 # 2) set states
 data.qpos = [np.pi/4, 0, 0, np.pi/2, 0, 0, 0]
-data.qvel = np.array([np.pi/2, 0, 0, 0, 0, 0, 0])
+data.qvel = [np.pi/2, 0, 0, 0, 0, 0, 0]
 
 # 3) forward kinematics
 mujoco.mj_forward(model, data)
-data.qacc = np.array([0, 0, 0, np.pi/2, 0, 0, 0]) # set qacc after mj_forward
+data.qacc = [0, 0, 0, np.pi/2, 0, 0, 0] # set qacc after mj_forward
 
 # 4) apply external force to end effector
 site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "ee")
