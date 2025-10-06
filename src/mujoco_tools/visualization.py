@@ -111,3 +111,16 @@ def draw_arc(viewer, arc_center, arc_axis, central_angle,
         )
         scn.geoms[scn.ngeom].rgba[:] = rgba
         scn.ngeom += 1
+
+def draw_torque(viewer, model, data, *, max_torque=100):
+    tau_jnt = data.qfrc_inverse - data.qfrc_applied
+    # display joint torques
+    for jid in range(model.njnt):
+        if model.jnt_type[jid] != mujoco.mjtJoint.mjJNT_HINGE:
+            continue  # skip non-hinge joints
+
+        # scale joint torques
+        arc_angle = tau_jnt[model.jnt_dofadr[jid]] * 2*np.pi/max_torque
+
+        draw_arc(viewer, data.xanchor[jid], data.xaxis[jid], arc_angle,
+                radius=0.05, nseg=16, width=0.006)
