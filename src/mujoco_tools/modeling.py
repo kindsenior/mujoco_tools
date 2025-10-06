@@ -61,18 +61,18 @@ def sample_robot_biped(spec, prefix=None, free_joint=True):
     # rleg_link2
     rleg_link2 = rleg_link1.add_body(name=f"{prefix}rleg_link2", mass=0.2, inertia=[2e-4, 2e-4, 2e-4])
     rleg_link2.add_joint(name=f"{prefix}rleg_joint2", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
-    rleg_link2.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,-0.05, 0,0,-0.25], size=[0.02, 0.0, 0.0], rgba=red)
+    rleg_link2.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,0, 0,0,-0.20], size=[0.02, 0.0, 0.0], rgba=red)
     # rleg_link3
     rleg_link3 = rleg_link2.add_body(name=f"{prefix}rleg_link3", mass=0.2, inertia=[2e-4, 2e-4, 2e-4], pos = [0, 0, -0.25])
     rleg_link3.add_joint(name=f"{prefix}rleg_joint3", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
-    rleg_link3.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,-0.05, 0,0,-0.25], size=[0.02, 0.0, 0.0], rgba=green)
+    rleg_link3.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,0, 0,0,-0.20], size=[0.02, 0.0, 0.0], rgba=green)
     # rleg_link4
     rleg_link4 = rleg_link3.add_body(name=f"{prefix}rleg_link4", mass=0.1, inertia=[1e-4, 1e-4, 1e-4], pos=[0, 0, -0.25])
     rleg_link4.add_joint(name=f"{prefix}rleg_joint4", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
     # rleg_link5
     rleg_link5 = rleg_link4.add_body(name=f"{prefix}rleg_link5", mass=0.1, inertia=[1e-4, 1e-4, 1e-4])
-    rleg_link5.add_joint(name=f"{prefix}rleg_joint5", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
-    rleg_link5.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0.05,0,0, 0.1,0,0], size=[0.02, 0.0, 0.0], rgba=blue)
+    rleg_link5.add_joint(name=f"{prefix}rleg_joint5", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[1, 0, 0], range=[-90, 90])
+    rleg_link5.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[-0.05,0,0, 0.1,0,0], size=[0.02, 0.0, 0.0], rgba=blue)
     # right end effector
     rleg_link5.add_site(name=f"{prefix}right_ee", pos=[0.12, 0, 0], size=[0.01, 0.0, 0.0])
 
@@ -85,17 +85,17 @@ def sample_robot_biped(spec, prefix=None, free_joint=True):
     # lleg_link2
     lleg_link2 = lleg_link1.add_body(name=f"{prefix}lleg_link2", mass=0.2, inertia=[2e-4, 2e-4, 2e-4])
     lleg_link2.add_joint(name=f"{prefix}lleg_joint2", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
-    lleg_link2.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,-0.05, 0,0,-0.25], size=[0.02, 0.0, 0.0], rgba=red)
+    lleg_link2.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,0, 0,0,-0.20], size=[0.02, 0.0, 0.0], rgba=red)
     # lleg_link3
     lleg_link3 = lleg_link2.add_body(name=f"{prefix}lleg_link3", mass=0.2, inertia=[2e-4, 2e-4, 2e-4], pos = [0, 0, -0.25])
     lleg_link3.add_joint(name=f"{prefix}lleg_joint3", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
-    lleg_link3.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,-0.05, 0,0,-0.25], size=[0.02, 0.0, 0.0], rgba=green)
+    lleg_link3.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0,0,0, 0,0,-0.20], size=[0.02, 0.0, 0.0], rgba=green)
     # lleg_link4
     lleg_link4 = lleg_link3.add_body(name=f"{prefix}lleg_link4", mass=0.1, inertia=[1e-4, 1e-4, 1e-4], pos=[0, 0, -0.25])
     lleg_link4.add_joint(name=f"{prefix}lleg_joint4", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
     # lleg_link5
     lleg_link5 = lleg_link4.add_body(name=f"{prefix}lleg_link5", mass=0.1, inertia=[1e-4, 1e-4, 1e-4])
-    lleg_link5.add_joint(name=f"{prefix}lleg_joint5", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 1, 0], range=[-90, 90])
-    lleg_link5.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[0.05,0,0, 0.1,0,0], size=[0.02, 0.0, 0.0], rgba=blue)
+    lleg_link5.add_joint(name=f"{prefix}lleg_joint5", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[1, 0, 0], range=[-90, 90])
+    lleg_link5.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, fromto=[-0.05,0,0, 0.1,0,0], size=[0.02, 0.0, 0.0], rgba=blue)
     # left end effector
     lleg_link5.add_site(name=f"{prefix}left_ee", pos=[0.12, 0, 0], size=[0.01, 0.0, 0.0])
