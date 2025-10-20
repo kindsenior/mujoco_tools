@@ -3,6 +3,7 @@ logger = logging.getLogger(__name__)
 import mujoco
 from mujoco_tools.visualization import *
 import numpy as np
+import re
 
 def _extend_indices_for_joint(model, jid, qpos_idx, dof_idx):
     """extend qpos_idx and dof_idx depending on joint type by adding indices of multiple DoF joints"""
@@ -56,6 +57,29 @@ def gather_indices_path(model, start_body_name, end_body_name):
         _extend_indices_for_joint(model, jid, qpos_idx, dof_idx)
 
     return np.array(qpos_idx), np.array(dof_idx), joint_ids, path
+
+def gather_joints_by_key(model, joint_key):
+    """
+    Gather joint indices whose names match the given key.
+
+    Returns:
+        qpos_idx (ndarray[int])  : the indices of qpos (sorted, no duplicates)
+        dof_idx   (ndarray[int]) : the indices of dof (sorted, no duplicates)
+        joint_names(list[str])   : the names of the corresponding joints (unordered)
+    """
+    qpos_idx, dof_idx = [], []
+    joint_names = []
+
+    for idx in range(model.njnt):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, idx)
+        if name and re.search(joint_key, name):
+            joint_names.append(name)
+            _extend_indices_for_joint(model, idx, qpos_idx, dof_idx)
+
+    return (np.array(sorted(set(qpos_idx))),
+            np.array(sorted(set(dof_idx))),
+            joint_names,
+            )
 
 def gather_joints_by_prefix(model, joint_prefix):
     """
