@@ -9,7 +9,7 @@ np.set_printoptions(linewidth=260)
 # 1) create robot model
 spec = mujoco.MjSpec()
 spec.from_string(common_xml)
-sample_manipulator(spec)
+sample_manipulator(spec, contype=0, conaffinity=0)
 model = spec.compile()
 data = mujoco.MjData(model)
 
