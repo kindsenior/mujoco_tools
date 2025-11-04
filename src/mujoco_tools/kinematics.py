@@ -212,6 +212,11 @@ def inverse_kinematics(model, data, site_name, goal_name,
         mujoco.mju_quat2Mat(goal_rot, goal_quat)
         draw_frame(viewer, goal_pos, goal_rot.reshape((3,3)), scale=0.2, width=0.01, alpha=0.3)
 
-    logger.info(f"IK iter {it}: pos err {np.linalg.norm(err[pos_indices])}, rot err {np.linalg.norm(err[rot_indices])}")
+    if not ik_result or logger.isEnabledFor(logging.INFO):
+        if ik_result:
+            logger.info(f"IK converged in {it} iters")
+        else:
+            logger.warning(f"Max iters reached without convergence. max_iters={max_iters}")
+        logger.warning(f" Final pos err {np.linalg.norm(err[pos_indices])}, rot err {np.linalg.norm(err[rot_indices])}")
 
     return ik_result, it
