@@ -18,7 +18,8 @@ common_xml = r"""
 
   <worldbody>
     <!-- ground floor with grid texture -->
-    <geom name="ground" type="plane" size="20 20 0.1" material="gridmat" rgba="1 1 1 1"/>
+    <geom name="ground" type="plane" size="20 20 0.1" material="gridmat" rgba="1 1 1 1"
+          contype="0" conaffinity="0"/> <!-- contype, conaffinity for disabling collision with other geoms -->
 
     <!-- sun light -->
     <light name="sun" pos="0 0 5" dir="0 0 -1" directional="true"
