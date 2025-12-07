@@ -1,5 +1,6 @@
 import mujoco
 import numpy as np
+import re
 
 common_xml = r"""
 <mujoco model="scene">
@@ -27,6 +28,30 @@ common_xml = r"""
   </worldbody>
 </mujoco>
 """
+
+def set_robot_group_by_key(model, re_key: str, group: int):
+    """Set visibility of geoms/sites with specific regular expression key"""
+    # geom
+    for gid in range(model.ngeom):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, gid)
+        if name and re.search(re_key, name):
+            model.geom_group[gid] = group
+
+    # site
+    for sid in range(model.nsite):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_SITE, sid)
+        if name and re.search(re_key, name):
+            model.site_group[sid] = group
+
+    # joint
+    for jid in range(model.njnt):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, jid)
+        if name and re.search(re_key, name):
+            model.jnt_group[jid] = group
+
+def set_robot_group_by_prefix(model, prefix: str, group: int):
+    """Set visibility of geoms/sites with a specific prefix"""
+    set_robot_group_by_key(model, f"^{re.escape(prefix)}", group)
 
 def draw_arrow(viewer, arrow_origin, arrow_vector,
                 *, scale=0.01, width=0.01, rgba=(0.9, 0.2, 0.2, 1.0), arrow_type=mujoco.mjtGeom.mjGEOM_ARROW):
