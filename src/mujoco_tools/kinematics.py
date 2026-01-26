@@ -6,7 +6,18 @@ import numpy as np
 import re
 
 def _extend_indices_for_joint(model, jid, qpos_idx, dof_idx):
-    """extend qpos_idx and dof_idx depending on joint type by adding indices of multiple DoF joints"""
+    """
+    extend qpos_idx and dof_idx depending on joint type by adding indices of multiple DoF joints
+    Args:
+        model: mujoco model
+        jid  : joint id
+        qpos_idx: list to extend qpos indices
+        dof_idx : list to extend dof indices
+    e.g.
+        Free joint: qpos_idx += [qadr, qadr+1, ..., qadr+6],    dof_idx += [dadr, dadr+1, ..., dadr+5]
+        Ball joint: qpos_idx += [qadr, qadr+1, qadr+2, qadr+3], dof_idx += [dadr, dadr+1, dadr+2]
+        Hinge/Slide joint: qpos_idx += [qadr],                  dof_idx += [dadr]
+    """
     jtype = model.jnt_type[jid]
     qadr  = model.jnt_qposadr[jid]
     dadr  = model.jnt_dofadr[jid]
@@ -66,6 +77,8 @@ def gather_joints_by_key(model, joint_key):
         qpos_idx (ndarray[int])  : the indices of qpos (sorted, no duplicates)
         dof_idx   (ndarray[int]) : the indices of dof (sorted, no duplicates)
         joint_names(list[str])   : the names of the corresponding joints (unordered)
+    e.g.:
+        joint_key = ".*_arm_.*" -> gather all joints like "robotX_arm_joint0", "robotY_arm_joint1", ...
     """
     qpos_idx, dof_idx = [], []
     joint_names = []
@@ -89,6 +102,8 @@ def gather_joints_by_prefix(model, joint_prefix):
         qpos_idx (ndarray[int])  : the indices of qpos (sorted, no duplicates)
         dof_idx   (ndarray[int]) : the indices of dof (sorted, no duplicates)
         joint_names(list[str])   : the names of the corresponding joints (unordered)
+    e.g.:
+        joint_prefix = "robotX_" -> gather all joints like "robotX_joint0", "robotX_joint1", ...
     """
     qpos_idx, dof_idx = [], []
     joint_names = []
