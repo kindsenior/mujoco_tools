@@ -88,7 +88,7 @@ def gather_joints_by_key(model, joint_key):
         name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, idx)
         if name and re.search(joint_key, name):
             joint_names.append(name)
-            _extend_indices_for_joint(model, idx, qpos_idx, dof_idx)
+            _extend_indices_for_joint(model, idx, qpos_idx, dof_idx) # extend indices for multiple DoF joints
 
     return (np.array(sorted(set(qpos_idx))),
             np.array(sorted(set(dof_idx))),
