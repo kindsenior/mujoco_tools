@@ -1,5 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
+from collections import defaultdict
 import mujoco
 from mujoco_tools.visualization import *
 import numpy as np
@@ -112,12 +113,46 @@ def gather_joints_by_prefix(model, joint_prefix):
         name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, idx)
         if name and name.startswith(joint_prefix):
             joint_names.append(name)
-            _extend_indices_for_joint(model, idx, qpos_idx, dof_idx)
+            _extend_indices_for_joint(model, idx, qpos_idx, dof_idx) # extend indices for multiple DoF joints
 
     return (np.array(sorted(set(qpos_idx))),
             np.array(sorted(set(dof_idx))),
             joint_names,
             )
+
+def gather_joint_pairs_by_key(model, joint_key):
+    """
+    joint_key にマッチする関節を集めた後
+    比較時だけ 'l' をすべて 'r' に置換した正規化名でグルーピングして
+    rleg/lleg のような左右の関節のインデクス・名前の組 を作る
+
+    Returns:
+      qpos_idx_pairs   : list[tuple[int, ...]]
+      dof_idx_pairs    : list[tuple[int, ...]]
+      joint_name_pairs : list[tuple[str, ...]]
+    """
+
+    groups = defaultdict(lambda: {"names": [], "qpos": [], "dof": []})
+    group_keys = [] # regularized keys (eg. rreg for rleg/lleg)
+
+    for idx in range(model.njnt):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, idx)
+        if not name or not re.search(joint_key, name):
+            continue
+
+        key = name.replace('l', 'r') # regularized name for grouping (eg. rleg/lleg -> rreg)
+        if key not in groups:
+            group_keys.append(key)
+
+        groups[key]["names"].append(name)
+
+        _extend_indices_for_joint(model, idx, groups[key]["qpos"], groups[key]["dof"]) # extend indices for multiple DoF joints
+
+    joint_name_pairs = [tuple(groups[k]["names"]) for k in group_keys]
+    qpos_idx_pairs   = [tuple(groups[k]["qpos"])  for k in group_keys]
+    dof_idx_pairs    = [tuple(groups[k]["dof"])   for k in group_keys]
+
+    return qpos_idx_pairs, dof_idx_pairs, joint_name_pairs
 
 def inverse_kinematics(model, data, site_name, goal_name,
                     *, max_iters=200, tol_pos=1e-5, tol_rot=1e-3, damping=1e-3, step_size=1.0,
